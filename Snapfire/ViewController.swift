@@ -38,6 +38,7 @@ class ViewController: UIViewController {
 
         setupCanvas()
         setupItemSelector()
+        setupItemDragger()
     }
 
     // MARK: Canvas methods
@@ -103,6 +104,29 @@ class ViewController: UIViewController {
         let item2 = UIView(frame: CGRect(x: 250, y: 250, width: 50, height: 50))
         item2.backgroundColor = .green
         canvasView.addSubview(item2)
+    }
+
+    // MARK: Item dragger methods
+
+    private func setupItemDragger() {
+        let panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
+        canvasView.addGestureRecognizer(panGesture)
+    }
+
+    @objc private func handlePan(_ gesture: UIPanGestureRecognizer) {
+        guard let item = selectedItem else { return }
+
+        let translation = gesture.translation(in: canvasView)
+
+        switch gesture.state {
+        case .changed, .ended:
+            item.center = CGPoint(x: item.center.x + translation.x,
+                                  y: item.center.y + translation.y)
+            gesture.setTranslation(.zero, in: canvasView)
+
+        default:
+            break
+        }
     }
 }
 
