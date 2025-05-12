@@ -74,7 +74,7 @@ class ViewController: UIViewController {
     @objc private func handleCanvasTap(_ gesture: UITapGestureRecognizer) {
         let location = gesture.location(in: canvasView)
 
-        if let tappedItem = canvasView.subviews.first(where: { $0.frame.contains(location) && $0 != scrollView }) {
+        if let tappedItem = canvasView.subviews.first(where: { $0.frame.contains(location) }) {
             select(item: tappedItem)
         } else {
             deselectItem()
