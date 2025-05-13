@@ -201,10 +201,10 @@ class ViewController: UIViewController {
 
     private func calculateAnchors() {
         horizontalAnchors = [0, canvasView.frame.width / 2, canvasView.frame.width]
-        horizontalAnchors += canvasView.subviews.filter { $0 != selectedItem }.flatMap { [$0.frame.minX, $0.frame.width / 2, $0.frame.maxX] }
+        horizontalAnchors += canvasView.subviews.filter { $0 != selectedItem && $0 != horizontalGuide && $0 != verticalGuide }.flatMap { [$0.frame.minX, $0.frame.minX + $0.frame.width / 2, $0.frame.maxX] }
 
         verticalAnchors = [0, canvasView.frame.height / 2, canvasView.frame.height]
-        verticalAnchors += canvasView.subviews.filter { $0 != selectedItem }.flatMap { [$0.frame.minY, $0.frame.height / 2, $0.frame.maxY] }
+        verticalAnchors += canvasView.subviews.filter { $0 != selectedItem && $0 != horizontalGuide && $0 != verticalGuide }.flatMap { [$0.frame.minY, $0.frame.minY + $0.frame.height / 2, $0.frame.maxY] }
     }
 
     private func calculateNewFrame(proposedFrame: CGRect) -> CGRect {
