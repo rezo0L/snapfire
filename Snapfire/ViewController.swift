@@ -31,6 +31,21 @@ class ViewController: UIViewController {
 
     private var selectedItem: UIView?
 
+    // MARK: Item dragger properties
+
+    private let snapThreshold: CGFloat = 1 // Magic number: it just works well
+
+    private var horizontalAnchors = [CGFloat]()
+    private var verticalAnchors = [CGFloat]()
+
+    private var initialTouchPoint: CGPoint = .zero
+    private var initialItemFrame: CGRect = .zero
+
+    private let hapticFeedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+
+    private let horizontalGuide = UIView()
+    private let verticalGuide = UIView()
+
     // MARK: View lifecycle
 
     override func viewDidLoad() {
@@ -86,6 +101,8 @@ class ViewController: UIViewController {
         if selectedItem != item {
             deselectItem()
             selectedItem = item
+            calculateAnchors()
+
             item.layer.borderColor = UIColor.yellow.cgColor
             item.layer.borderWidth = 3
         }
@@ -111,22 +128,105 @@ class ViewController: UIViewController {
     private func setupItemDragger() {
         let panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
         canvasView.addGestureRecognizer(panGesture)
+
+        hapticFeedbackGenerator.prepare()
+        setupGuidelines()
+    }
+
+    private func setupGuidelines() {
+        [horizontalGuide, verticalGuide].forEach {
+            $0.backgroundColor = UIColor.systemRed.withAlphaComponent(0.8)
+            $0.isHidden = true
+            canvasView.addSubview($0)
+        }
     }
 
     @objc private func handlePan(_ gesture: UIPanGestureRecognizer) {
         guard let item = selectedItem else { return }
 
-        let translation = gesture.translation(in: canvasView)
+        let currentTouchPoint = gesture.location(in: canvasView)
 
         switch gesture.state {
-        case .changed, .ended:
-            item.center = CGPoint(x: item.center.x + translation.x,
-                                  y: item.center.y + translation.y)
-            gesture.setTranslation(.zero, in: canvasView)
+        case .began:
+            initialTouchPoint = currentTouchPoint
+            initialItemFrame = item.frame
+
+        case .changed:
+            let dx = currentTouchPoint.x - initialTouchPoint.x
+            let dy = currentTouchPoint.y - initialTouchPoint.y
+
+            let proposedFrame = initialItemFrame.offsetBy(dx: dx, dy: dy)
+            let adjustedFrame = calculateNewFrame(proposedFrame: proposedFrame)
+
+            // Snap happened
+            if adjustedFrame.minX != proposedFrame.minX {
+                let x = horizontalAnchors.first(where: { [adjustedFrame.minX, adjustedFrame.maxX, adjustedFrame.midX].contains($0) }) ?? adjustedFrame.minX
+                verticalGuide.isHidden = false
+                verticalGuide.frame = CGRect(x: x, y: 0, width: 1, height: canvasView.bounds.height)
+
+                // New snap
+                if adjustedFrame.minX != item.frame.minX {
+                    hapticFeedbackGenerator.impactOccurred()
+                    hapticFeedbackGenerator.prepare()
+                }
+            } else {
+                verticalGuide.isHidden = true
+            }
+
+            if adjustedFrame.minY != proposedFrame.minY {
+                let y = verticalAnchors.first(where: { [adjustedFrame.minY, adjustedFrame.maxY, adjustedFrame.midY].contains($0) }) ?? adjustedFrame.minY
+                horizontalGuide.isHidden = false
+                horizontalGuide.frame = CGRect(x: 0, y: y, width: canvasView.bounds.width, height: 1)
+
+                // New snap
+                if adjustedFrame.minY != item.frame.minY {
+                    hapticFeedbackGenerator.impactOccurred()
+                    hapticFeedbackGenerator.prepare()
+                }
+            } else {
+                horizontalGuide.isHidden = true
+            }
+            item.frame = adjustedFrame
+
+        case .ended, .cancelled, .failed:
+            initialTouchPoint = .zero
+            initialItemFrame = .zero
+            horizontalGuide.isHidden = true
+            verticalGuide.isHidden = true
 
         default:
             break
         }
+    }
+
+    private func calculateAnchors() {
+        horizontalAnchors = [0, canvasView.frame.width / 2, canvasView.frame.width]
+        horizontalAnchors += canvasView.subviews.filter { $0 != selectedItem && $0 != horizontalGuide && $0 != verticalGuide }.flatMap { [$0.frame.minX, $0.frame.midX, $0.frame.maxX] }
+
+        verticalAnchors = [0, canvasView.frame.height / 2, canvasView.frame.height]
+        verticalAnchors += canvasView.subviews.filter { $0 != selectedItem && $0 != horizontalGuide && $0 != verticalGuide }.flatMap { [$0.frame.minY, $0.frame.midY, $0.frame.maxY] }
+    }
+
+    private func calculateNewFrame(proposedFrame: CGRect) -> CGRect {
+        var dx: CGFloat = 0
+        var dy: CGFloat = 0
+
+        let minHorizontalDistance = horizontalAnchors.flatMap { [$0 - proposedFrame.minX, $0 - proposedFrame.maxX, $0 - proposedFrame.midX] }.min {
+            abs($0) < abs($1)
+        }
+        let minVerticalDistance = verticalAnchors.flatMap { [$0 - proposedFrame.minY, $0 - proposedFrame.maxY, $0 - proposedFrame.midY] }.min {
+            abs($0) < abs($1)
+        }
+
+        if let minHorizontalDistance, abs(minHorizontalDistance) <= snapThreshold {
+            dx = minHorizontalDistance
+        }
+
+        if let minVerticalDistance, abs(minVerticalDistance) <= snapThreshold {
+            dy = minVerticalDistance
+        }
+
+        return proposedFrame.offsetBy(dx: dx, dy: dy)
     }
 }
 
