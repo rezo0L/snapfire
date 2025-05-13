@@ -33,7 +33,7 @@ class ViewController: UIViewController {
 
     // MARK: Item dragger properties
 
-    private let snapThreshold: CGFloat = 2 // Magic number: it just works well
+    private let snapThreshold: CGFloat = 1 // Magic number: it just works well
 
     private var initialTouchPoint: CGPoint = .zero
     private var initialItemFrame: CGRect = .zero
@@ -150,21 +150,25 @@ class ViewController: UIViewController {
         var dx: CGFloat = 0
         var dy: CGFloat = 0
 
-        let leftDistance = proposedFrame.minX
-        let rightDistance = canvasView.bounds.width - proposedFrame.maxX
-        let topDistance = proposedFrame.minY
-        let bottomDistance = canvasView.bounds.height - proposedFrame.maxY
+        var horizontalAnchors = [0, canvasView.frame.width / 2, canvasView.frame.width]
+        horizontalAnchors += canvasView.subviews.filter { $0 != selectedItem }.flatMap { [$0.frame.minX, $0.frame.width / 2, $0.frame.maxX] }
 
-        if abs(leftDistance) <= snapThreshold {
-            dx = -leftDistance
-        } else if abs(rightDistance) <= snapThreshold {
-            dx = rightDistance
+        var verticalAnchors = [0, canvasView.frame.height / 2, canvasView.frame.height]
+        verticalAnchors += canvasView.subviews.filter { $0 != selectedItem }.flatMap { [$0.frame.minY, $0.frame.height / 2, $0.frame.maxY] }
+
+        let minHorizontalDistance = horizontalAnchors.flatMap { [$0 - proposedFrame.minX, $0 - proposedFrame.maxX] }.min {
+            abs($0) < abs($1)
+        }
+        let minVerticalDistance = verticalAnchors.flatMap { [$0 - proposedFrame.minY, $0 - proposedFrame.maxY] }.min {
+            abs($0) < abs($1)
         }
 
-        if abs(topDistance) <= snapThreshold {
-            dy = -topDistance
-        } else if abs(bottomDistance) <= snapThreshold {
-            dy = bottomDistance
+        if let minHorizontalDistance, abs(minHorizontalDistance) <= snapThreshold {
+            dx = minHorizontalDistance
+        }
+
+        if let minVerticalDistance, abs(minVerticalDistance) <= snapThreshold {
+            dy = minVerticalDistance
         }
 
         return proposedFrame.offsetBy(dx: dx, dy: dy)
