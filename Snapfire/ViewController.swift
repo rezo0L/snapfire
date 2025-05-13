@@ -31,6 +31,13 @@ class ViewController: UIViewController {
 
     private var selectedItem: UIView?
 
+    // MARK: Item dragger properties
+
+    private let snapThreshold: CGFloat = 2 // Magic number: it just works well
+
+    private var initialTouchPoint: CGPoint = .zero
+    private var initialItemFrame: CGRect = .zero
+
     // MARK: View lifecycle
 
     override func viewDidLoad() {
@@ -116,17 +123,51 @@ class ViewController: UIViewController {
     @objc private func handlePan(_ gesture: UIPanGestureRecognizer) {
         guard let item = selectedItem else { return }
 
-        let translation = gesture.translation(in: canvasView)
+        let currentTouchPoint = gesture.location(in: canvasView)
 
         switch gesture.state {
-        case .changed, .ended:
-            item.center = CGPoint(x: item.center.x + translation.x,
-                                  y: item.center.y + translation.y)
-            gesture.setTranslation(.zero, in: canvasView)
+        case .began:
+            initialTouchPoint = currentTouchPoint
+            initialItemFrame = item.frame
+
+        case .changed:
+            let dx = currentTouchPoint.x - initialTouchPoint.x
+            let dy = currentTouchPoint.y - initialTouchPoint.y
+
+            let proposedFrame = initialItemFrame.offsetBy(dx: dx, dy: dy)
+            item.frame = calculateNewFrame(proposedFrame: proposedFrame)
+
+        case .ended, .cancelled, .failed:
+            initialTouchPoint = .zero
+            initialItemFrame = .zero
 
         default:
             break
         }
+    }
+
+    private func calculateNewFrame(proposedFrame: CGRect) -> CGRect {
+        var dx: CGFloat = 0
+        var dy: CGFloat = 0
+
+        let leftDistance = proposedFrame.minX
+        let rightDistance = canvasView.bounds.width - proposedFrame.maxX
+        let topDistance = proposedFrame.minY
+        let bottomDistance = canvasView.bounds.height - proposedFrame.maxY
+
+        if abs(leftDistance) <= snapThreshold {
+            dx = -leftDistance
+        } else if abs(rightDistance) <= snapThreshold {
+            dx = rightDistance
+        }
+
+        if abs(topDistance) <= snapThreshold {
+            dy = -topDistance
+        } else if abs(bottomDistance) <= snapThreshold {
+            dy = bottomDistance
+        }
+
+        return proposedFrame.offsetBy(dx: dx, dy: dy)
     }
 }
 
