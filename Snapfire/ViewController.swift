@@ -160,7 +160,7 @@ class ViewController: UIViewController {
 
             // Snap happened
             if adjustedFrame.minX != proposedFrame.minX {
-                let x = horizontalAnchors.first(where: { [adjustedFrame.minX, adjustedFrame.maxX].contains($0) }) ?? adjustedFrame.minX
+                let x = horizontalAnchors.first(where: { [adjustedFrame.minX, adjustedFrame.maxX, adjustedFrame.midX].contains($0) }) ?? adjustedFrame.minX
                 verticalGuide.isHidden = false
                 verticalGuide.frame = CGRect(x: x, y: 0, width: 1, height: canvasView.bounds.height)
 
@@ -174,7 +174,7 @@ class ViewController: UIViewController {
             }
 
             if adjustedFrame.minY != proposedFrame.minY {
-                let y = verticalAnchors.first(where: { [adjustedFrame.minY, adjustedFrame.maxY].contains($0) }) ?? adjustedFrame.minY
+                let y = verticalAnchors.first(where: { [adjustedFrame.minY, adjustedFrame.maxY, adjustedFrame.midY].contains($0) }) ?? adjustedFrame.minY
                 horizontalGuide.isHidden = false
                 horizontalGuide.frame = CGRect(x: 0, y: y, width: canvasView.bounds.width, height: 1)
 
@@ -201,20 +201,20 @@ class ViewController: UIViewController {
 
     private func calculateAnchors() {
         horizontalAnchors = [0, canvasView.frame.width / 2, canvasView.frame.width]
-        horizontalAnchors += canvasView.subviews.filter { $0 != selectedItem && $0 != horizontalGuide && $0 != verticalGuide }.flatMap { [$0.frame.minX, $0.frame.minX + $0.frame.width / 2, $0.frame.maxX] }
+        horizontalAnchors += canvasView.subviews.filter { $0 != selectedItem && $0 != horizontalGuide && $0 != verticalGuide }.flatMap { [$0.frame.minX, $0.frame.midX, $0.frame.maxX] }
 
         verticalAnchors = [0, canvasView.frame.height / 2, canvasView.frame.height]
-        verticalAnchors += canvasView.subviews.filter { $0 != selectedItem && $0 != horizontalGuide && $0 != verticalGuide }.flatMap { [$0.frame.minY, $0.frame.minY + $0.frame.height / 2, $0.frame.maxY] }
+        verticalAnchors += canvasView.subviews.filter { $0 != selectedItem && $0 != horizontalGuide && $0 != verticalGuide }.flatMap { [$0.frame.minY, $0.frame.midY, $0.frame.maxY] }
     }
 
     private func calculateNewFrame(proposedFrame: CGRect) -> CGRect {
         var dx: CGFloat = 0
         var dy: CGFloat = 0
 
-        let minHorizontalDistance = horizontalAnchors.flatMap { [$0 - proposedFrame.minX, $0 - proposedFrame.maxX] }.min {
+        let minHorizontalDistance = horizontalAnchors.flatMap { [$0 - proposedFrame.minX, $0 - proposedFrame.maxX, $0 - proposedFrame.midX] }.min {
             abs($0) < abs($1)
         }
-        let minVerticalDistance = verticalAnchors.flatMap { [$0 - proposedFrame.minY, $0 - proposedFrame.maxY] }.min {
+        let minVerticalDistance = verticalAnchors.flatMap { [$0 - proposedFrame.minY, $0 - proposedFrame.maxY, $0 - proposedFrame.midY] }.min {
             abs($0) < abs($1)
         }
 
