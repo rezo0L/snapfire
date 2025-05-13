@@ -35,6 +35,9 @@ class ViewController: UIViewController {
 
     private let snapThreshold: CGFloat = 1 // Magic number: it just works well
 
+    private var horizontalAnchors = [CGFloat]()
+    private var verticalAnchors = [CGFloat]()
+
     private var initialTouchPoint: CGPoint = .zero
     private var initialItemFrame: CGRect = .zero
 
@@ -95,6 +98,8 @@ class ViewController: UIViewController {
         if selectedItem != item {
             deselectItem()
             selectedItem = item
+            calculateAnchors()
+
             item.layer.borderColor = UIColor.yellow.cgColor
             item.layer.borderWidth = 3
         }
@@ -157,15 +162,17 @@ class ViewController: UIViewController {
         }
     }
 
+    private func calculateAnchors() {
+        horizontalAnchors = [0, canvasView.frame.width / 2, canvasView.frame.width]
+        horizontalAnchors += canvasView.subviews.filter { $0 != selectedItem }.flatMap { [$0.frame.minX, $0.frame.width / 2, $0.frame.maxX] }
+
+        verticalAnchors = [0, canvasView.frame.height / 2, canvasView.frame.height]
+        verticalAnchors += canvasView.subviews.filter { $0 != selectedItem }.flatMap { [$0.frame.minY, $0.frame.height / 2, $0.frame.maxY] }
+    }
+
     private func calculateNewFrame(proposedFrame: CGRect) -> CGRect {
         var dx: CGFloat = 0
         var dy: CGFloat = 0
-
-        var horizontalAnchors = [0, canvasView.frame.width / 2, canvasView.frame.width]
-        horizontalAnchors += canvasView.subviews.filter { $0 != selectedItem }.flatMap { [$0.frame.minX, $0.frame.width / 2, $0.frame.maxX] }
-
-        var verticalAnchors = [0, canvasView.frame.height / 2, canvasView.frame.height]
-        verticalAnchors += canvasView.subviews.filter { $0 != selectedItem }.flatMap { [$0.frame.minY, $0.frame.height / 2, $0.frame.maxY] }
 
         let minHorizontalDistance = horizontalAnchors.flatMap { [$0 - proposedFrame.minX, $0 - proposedFrame.maxX] }.min {
             abs($0) < abs($1)
