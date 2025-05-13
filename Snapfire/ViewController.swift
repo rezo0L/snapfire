@@ -43,6 +43,9 @@ class ViewController: UIViewController {
 
     private let hapticFeedbackGenerator = UIImpactFeedbackGenerator(style: .light)
 
+    private let horizontalGuide = UIView()
+    private let verticalGuide = UIView()
+
     // MARK: View lifecycle
 
     override func viewDidLoad() {
@@ -127,6 +130,15 @@ class ViewController: UIViewController {
         canvasView.addGestureRecognizer(panGesture)
 
         hapticFeedbackGenerator.prepare()
+        setupGuidelines()
+    }
+
+    private func setupGuidelines() {
+        [horizontalGuide, verticalGuide].forEach {
+            $0.backgroundColor = UIColor.systemRed.withAlphaComponent(0.8)
+            $0.isHidden = true
+            canvasView.addSubview($0)
+        }
     }
 
     @objc private func handlePan(_ gesture: UIPanGestureRecognizer) {
@@ -146,16 +158,41 @@ class ViewController: UIViewController {
             let proposedFrame = initialItemFrame.offsetBy(dx: dx, dy: dy)
             let adjustedFrame = calculateNewFrame(proposedFrame: proposedFrame)
 
-            if adjustedFrame.minX != item.frame.minX && adjustedFrame.minX != proposedFrame.minX
-                || adjustedFrame.minY != item.frame.minY && adjustedFrame.minY != proposedFrame.minY {
-                hapticFeedbackGenerator.impactOccurred()
-                hapticFeedbackGenerator.prepare()
+            // Snap happened
+            if adjustedFrame.minX != proposedFrame.minX {
+                let x = horizontalAnchors.first(where: { [adjustedFrame.minX, adjustedFrame.maxX].contains($0) }) ?? adjustedFrame.minX
+                verticalGuide.isHidden = false
+                verticalGuide.frame = CGRect(x: x, y: 0, width: 1, height: canvasView.bounds.height)
+
+                // New snap
+                if adjustedFrame.minX != item.frame.minX {
+                    hapticFeedbackGenerator.impactOccurred()
+                    hapticFeedbackGenerator.prepare()
+                }
+            } else {
+                verticalGuide.isHidden = true
+            }
+
+            if adjustedFrame.minY != proposedFrame.minY {
+                let y = verticalAnchors.first(where: { [adjustedFrame.minY, adjustedFrame.maxY].contains($0) }) ?? adjustedFrame.minY
+                horizontalGuide.isHidden = false
+                horizontalGuide.frame = CGRect(x: 0, y: y, width: canvasView.bounds.width, height: 1)
+
+                // New snap
+                if adjustedFrame.minY != item.frame.minY {
+                    hapticFeedbackGenerator.impactOccurred()
+                    hapticFeedbackGenerator.prepare()
+                }
+            } else {
+                horizontalGuide.isHidden = true
             }
             item.frame = adjustedFrame
 
         case .ended, .cancelled, .failed:
             initialTouchPoint = .zero
             initialItemFrame = .zero
+            horizontalGuide.isHidden = true
+            verticalGuide.isHidden = true
 
         default:
             break
