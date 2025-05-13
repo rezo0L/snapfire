@@ -38,6 +38,8 @@ class ViewController: UIViewController {
     private var initialTouchPoint: CGPoint = .zero
     private var initialItemFrame: CGRect = .zero
 
+    private let hapticFeedbackGenerator = UIImpactFeedbackGenerator(style: .light)
+
     // MARK: View lifecycle
 
     override func viewDidLoad() {
@@ -118,6 +120,8 @@ class ViewController: UIViewController {
     private func setupItemDragger() {
         let panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
         canvasView.addGestureRecognizer(panGesture)
+
+        hapticFeedbackGenerator.prepare()
     }
 
     @objc private func handlePan(_ gesture: UIPanGestureRecognizer) {
@@ -135,7 +139,14 @@ class ViewController: UIViewController {
             let dy = currentTouchPoint.y - initialTouchPoint.y
 
             let proposedFrame = initialItemFrame.offsetBy(dx: dx, dy: dy)
-            item.frame = calculateNewFrame(proposedFrame: proposedFrame)
+            let adjustedFrame = calculateNewFrame(proposedFrame: proposedFrame)
+
+            if adjustedFrame.minX != item.frame.minX && adjustedFrame.minX != proposedFrame.minX
+                || adjustedFrame.minY != item.frame.minY && adjustedFrame.minY != proposedFrame.minY {
+                hapticFeedbackGenerator.impactOccurred()
+                hapticFeedbackGenerator.prepare()
+            }
+            item.frame = adjustedFrame
 
         case .ended, .cancelled, .failed:
             initialTouchPoint = .zero
