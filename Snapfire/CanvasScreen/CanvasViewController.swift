@@ -59,6 +59,9 @@ class CanvasViewController: UIViewController {
 
     private let snapper: Snapper
 
+    // MARK: Fetch items methods
+    private var overlays: [Category] = []
+
     // MARK: View lifecycle
 
     override func viewDidLoad() {
@@ -68,6 +71,10 @@ class CanvasViewController: UIViewController {
         setupItemSelector()
         setupItemDragger()
         setupItemAdder()
+
+        Task {
+            self.overlays = await fetchItems()
+        }
     }
 
     // MARK: Canvas methods
@@ -235,10 +242,12 @@ class CanvasViewController: UIViewController {
     }
 
     @objc private func showItemPicker() {
-        let viewController = ItemPickerViewController()
-        viewController.modalPresentationStyle = .pageSheet
+        let viewController = ItemPickerViewController(overlays: overlays)
 
-        if let sheet = viewController.sheetPresentationController {
+        let navigationController = UINavigationController(rootViewController: viewController)
+        navigationController.modalPresentationStyle = .pageSheet
+
+        if let sheet = navigationController.sheetPresentationController {
             sheet.detents = [.medium(), .large()]
             sheet.prefersGrabberVisible = true
         }
@@ -247,7 +256,7 @@ class CanvasViewController: UIViewController {
             self?.addItem(item)
         }
 
-        present(viewController, animated: true)
+        present(navigationController, animated: true)
     }
 
     private func addItem(_ item: UIImage) {
@@ -260,6 +269,19 @@ class CanvasViewController: UIViewController {
 
         canvasView.addSubview(imageView)
         select(item: imageView)
+    }
+
+    // MARK: Fetch items methods
+
+    private func fetchItems() async -> [Category] {
+        guard let url = URL(string: "https://appostropheanalytics.herokuapp.com/scrl/test/overlays") else { return [] }
+
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            return try JSONDecoder().decode([Category].self, from: data)
+        } catch {
+            return []
+        }
     }
 }
 
