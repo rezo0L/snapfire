@@ -46,10 +46,8 @@ class CanvasViewController: UIViewController {
 
     // MARK: Item dragger properties
 
+    private var anchors = [Anchor]()
     private let snapThreshold: CGFloat = 1 // Magic number: it just works well
-
-    private var horizontalAnchors = [CGFloat]()
-    private var verticalAnchors = [CGFloat]()
 
     private var initialTouchPoint: CGPoint = .zero
     private var initialItemFrame: CGRect = .zero
@@ -159,21 +157,16 @@ class CanvasViewController: UIViewController {
             let dy = currentTouchPoint.y - initialTouchPoint.y
 
             let proposedFrame = initialItemFrame.offsetBy(dx: dx, dy: dy)
-            let adjustedFrame = snapper.calculateSnap(
-                for: proposedFrame,
-                anchors: horizontalAnchors.map { Anchor(point: CGPoint(x: $0, y: 0), angle: .zero) } +
-                         verticalAnchors.map { Anchor(point: CGPoint(x: 0, y: $0), angle: .pi / 2) },
-                threshold: snapThreshold
-            )
+            let snapResult = snapper.calculateSnap(for: proposedFrame, anchors: anchors, threshold: snapThreshold)
 
             // Snap happened
-            if adjustedFrame.minX != proposedFrame.minX {
-                let x = horizontalAnchors.first(where: { [adjustedFrame.minX, adjustedFrame.maxX, adjustedFrame.midX].contains($0) }) ?? adjustedFrame.minX
+            if let horizontalAnchor = snapResult.snappedAnchors.first(where: { $0.angle == .pi / 2 })?.point.x {
                 verticalGuide.isHidden = false
-                verticalGuide.frame = CGRect(x: x, y: 0, width: 1, height: canvasView.bounds.height)
 
                 // New snap
-                if adjustedFrame.minX != item.frame.minX {
+                if verticalGuide.frame.minX != horizontalAnchor {
+                    verticalGuide.frame = CGRect(x: horizontalAnchor, y: 0, width: 1, height: canvasView.bounds.height)
+
                     hapticFeedbackGenerator.impactOccurred()
                     hapticFeedbackGenerator.prepare()
                 }
@@ -181,20 +174,21 @@ class CanvasViewController: UIViewController {
                 verticalGuide.isHidden = true
             }
 
-            if adjustedFrame.minY != proposedFrame.minY {
-                let y = verticalAnchors.first(where: { [adjustedFrame.minY, adjustedFrame.maxY, adjustedFrame.midY].contains($0) }) ?? adjustedFrame.minY
+            // Snap happened
+            if let verticalAnchor = snapResult.snappedAnchors.first(where: { $0.angle == 0 })?.point.y {
                 horizontalGuide.isHidden = false
-                horizontalGuide.frame = CGRect(x: 0, y: y, width: canvasView.bounds.width, height: 1)
 
                 // New snap
-                if adjustedFrame.minY != item.frame.minY {
+                if horizontalGuide.frame.minY != verticalAnchor {
+                    horizontalGuide.frame = CGRect(x: 0, y: verticalAnchor, width: canvasView.bounds.width, height: 1)
+
                     hapticFeedbackGenerator.impactOccurred()
                     hapticFeedbackGenerator.prepare()
                 }
             } else {
                 horizontalGuide.isHidden = true
             }
-            item.frame = adjustedFrame
+            item.frame = proposedFrame.offsetBy(dx: snapResult.delta.x, dy: snapResult.delta.y)
 
         case .ended, .cancelled, .failed:
             initialTouchPoint = .zero
@@ -208,11 +202,15 @@ class CanvasViewController: UIViewController {
     }
 
     private func calculateAnchors() {
-        horizontalAnchors = [0, canvasView.frame.width / 2, canvasView.frame.width]
-        horizontalAnchors += canvasView.subviews.filter { $0 != selectedItem && $0 != horizontalGuide && $0 != verticalGuide }.flatMap { [$0.frame.minX, $0.frame.midX, $0.frame.maxX] }
+        var xAnchors = [0, canvasView.frame.width / 2, canvasView.frame.width]
+        xAnchors += canvasView.subviews.filter { $0 != selectedItem && $0 != horizontalGuide && $0 != verticalGuide }.flatMap { [$0.frame.minX, $0.frame.midX, $0.frame.maxX] }
 
-        verticalAnchors = [0, canvasView.frame.height / 2, canvasView.frame.height]
-        verticalAnchors += canvasView.subviews.filter { $0 != selectedItem && $0 != horizontalGuide && $0 != verticalGuide }.flatMap { [$0.frame.minY, $0.frame.midY, $0.frame.maxY] }
+        var yAnchors = [0, canvasView.frame.height / 2, canvasView.frame.height]
+        yAnchors += canvasView.subviews.filter { $0 != selectedItem && $0 != horizontalGuide && $0 != verticalGuide }.flatMap
+        { [$0.frame.minY, $0.frame.midY, $0.frame.maxY] }
+
+        anchors = xAnchors.map { Anchor(point: CGPoint(x: $0, y: 0), angle: .pi / 2) } +
+                  yAnchors.map { Anchor(point: CGPoint(x: 0, y: $0), angle: .zero) }
     }
 
     // MARK: Item adder methods

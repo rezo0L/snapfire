@@ -16,11 +16,21 @@ public struct Anchor {
     public let angle: CGFloat
 }
 
+/// The result of a snapping calculation, including the offset delta and matched anchors.
+public struct SnapResult {
+
+    /// The offset delta to apply to the proposed frame.
+    public let delta: CGPoint
+
+    /// The anchors that were snapped to.
+    public let snappedAnchors: [Anchor]
+}
+
 /// Protocol defining the snapping behavior.
 ///
 /// This protocol is responsible for calculating the snapping behavior of a view based on its proposed frame and a set of anchor points.
 public protocol Snapper {
 
     /// Calculates the snapping behavior for a given proposed frame and a set of anchor points.
-    func calculateSnap(for proposedFrame: CGRect, anchors: [Anchor], threshold: CGFloat) -> CGRect
+    func calculateSnap(for proposedFrame: CGRect, anchors: [Anchor], threshold: CGFloat) -> SnapResult
 }
