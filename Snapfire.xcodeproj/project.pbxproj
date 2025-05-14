@@ -6,15 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		F5A779CF2DD4C94100CDC607 /* SnapshotTesting in Frameworks */ = {isa = PBXBuildFile; productRef = F5A779CE2DD4C94100CDC607 /* SnapshotTesting */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		F5A0CB4D2DD11749007237E1 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = F5A0CB2E2DD11748007237E1 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = F5A0CB352DD11748007237E1;
-			remoteInfo = Snapfire;
-		};
-		F5A0CB572DD11749007237E1 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = F5A0CB2E2DD11748007237E1 /* Project object */;
 			proxyType = 1;
@@ -26,7 +23,6 @@
 /* Begin PBXFileReference section */
 		F5A0CB362DD11748007237E1 /* Snapfire.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Snapfire.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F5A0CB4C2DD11749007237E1 /* SnapfireTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SnapfireTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		F5A0CB562DD11749007237E1 /* SnapfireUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SnapfireUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -67,13 +63,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		F5A0CB532DD11749007237E1 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
+				F5A779CF2DD4C94100CDC607 /* SnapshotTesting in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -94,7 +84,6 @@
 			children = (
 				F5A0CB362DD11748007237E1 /* Snapfire.app */,
 				F5A0CB4C2DD11749007237E1 /* SnapfireTests.xctest */,
-				F5A0CB562DD11749007237E1 /* SnapfireUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -142,30 +131,11 @@
 			);
 			name = SnapfireTests;
 			packageProductDependencies = (
+				F5A779CE2DD4C94100CDC607 /* SnapshotTesting */,
 			);
 			productName = SnapfireTests;
 			productReference = F5A0CB4C2DD11749007237E1 /* SnapfireTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
-		};
-		F5A0CB552DD11749007237E1 /* SnapfireUITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = F5A0CB672DD11749007237E1 /* Build configuration list for PBXNativeTarget "SnapfireUITests" */;
-			buildPhases = (
-				F5A0CB522DD11749007237E1 /* Sources */,
-				F5A0CB532DD11749007237E1 /* Frameworks */,
-				F5A0CB542DD11749007237E1 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				F5A0CB582DD11749007237E1 /* PBXTargetDependency */,
-			);
-			name = SnapfireUITests;
-			packageProductDependencies = (
-			);
-			productName = SnapfireUITests;
-			productReference = F5A0CB562DD11749007237E1 /* SnapfireUITests.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
 
@@ -184,10 +154,6 @@
 						CreatedOnToolsVersion = 16.3;
 						TestTargetID = F5A0CB352DD11748007237E1;
 					};
-					F5A0CB552DD11749007237E1 = {
-						CreatedOnToolsVersion = 16.3;
-						TestTargetID = F5A0CB352DD11748007237E1;
-					};
 				};
 			};
 			buildConfigurationList = F5A0CB312DD11748007237E1 /* Build configuration list for PBXProject "Snapfire" */;
@@ -199,6 +165,9 @@
 			);
 			mainGroup = F5A0CB2D2DD11748007237E1;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				F5A779CD2DD4C94100CDC607 /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = F5A0CB372DD11748007237E1 /* Products */;
 			projectDirPath = "";
@@ -206,7 +175,6 @@
 			targets = (
 				F5A0CB352DD11748007237E1 /* Snapfire */,
 				F5A0CB4B2DD11749007237E1 /* SnapfireTests */,
-				F5A0CB552DD11749007237E1 /* SnapfireUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -220,13 +188,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		F5A0CB4A2DD11749007237E1 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		F5A0CB542DD11749007237E1 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -250,13 +211,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		F5A0CB522DD11749007237E1 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -264,11 +218,6 @@
 			isa = PBXTargetDependency;
 			target = F5A0CB352DD11748007237E1 /* Snapfire */;
 			targetProxy = F5A0CB4D2DD11749007237E1 /* PBXContainerItemProxy */;
-		};
-		F5A0CB582DD11749007237E1 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = F5A0CB352DD11748007237E1 /* Snapfire */;
-			targetProxy = F5A0CB572DD11749007237E1 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -455,7 +404,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.rezo0l.SnapfireTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -473,7 +422,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.4;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.rezo0l.SnapfireTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -481,38 +430,6 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Snapfire.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Snapfire";
-			};
-			name = Release;
-		};
-		F5A0CB682DD11749007237E1 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.rezo0l.SnapfireUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = Snapfire;
-			};
-			name = Debug;
-		};
-		F5A0CB692DD11749007237E1 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.rezo0l.SnapfireUITests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = Snapfire;
 			};
 			name = Release;
 		};
@@ -546,16 +463,26 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		F5A0CB672DD11749007237E1 /* Build configuration list for PBXNativeTarget "SnapfireUITests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				F5A0CB682DD11749007237E1 /* Debug */,
-				F5A0CB692DD11749007237E1 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		F5A779CD2DD4C94100CDC607 /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-snapshot-testing";
+			requirement = {
+				kind = exactVersion;
+				version = 1.18.3;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		F5A779CE2DD4C94100CDC607 /* SnapshotTesting */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F5A779CD2DD4C94100CDC607 /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */;
+			productName = SnapshotTesting;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = F5A0CB2E2DD11748007237E1 /* Project object */;
 }

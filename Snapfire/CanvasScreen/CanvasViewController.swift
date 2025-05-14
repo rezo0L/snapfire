@@ -1,5 +1,5 @@
 //
-//  ViewController.swift
+//  CanvasViewController.swift
 //  Snapfire
 //
 //  Created by Reza on 2025-05-11.
@@ -7,8 +7,18 @@
 
 import UIKit
 
-class ViewController: UIViewController {
+class CanvasViewController: UIViewController {
 
+    init(snapper: Snapper = AxisSnapper()) {
+        self.snapper = snapper
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        self.snapper = AxisSnapper()
+        super.init(coder: coder)
+    }
+    
     // MARK: Canvas properties
 
     // Magic numbers: no specific requirement, it just looks good
@@ -36,10 +46,8 @@ class ViewController: UIViewController {
 
     // MARK: Item dragger properties
 
+    private var anchors = [Anchor]()
     private let snapThreshold: CGFloat = 1 // Magic number: it just works well
-
-    private var horizontalAnchors = [CGFloat]()
-    private var verticalAnchors = [CGFloat]()
 
     private var initialTouchPoint: CGPoint = .zero
     private var initialItemFrame: CGRect = .zero
@@ -48,6 +56,8 @@ class ViewController: UIViewController {
 
     private let horizontalGuide = UIView()
     private let verticalGuide = UIView()
+
+    private let snapper: Snapper
 
     // MARK: View lifecycle
 
@@ -105,8 +115,8 @@ class ViewController: UIViewController {
             selectedItem = item
             calculateAnchors()
 
-            item.layer.borderColor = UIColor.yellow.cgColor
-            item.layer.borderWidth = 3
+            item.layer.borderColor = UIColor.systemBlue.cgColor
+            item.layer.borderWidth = 1
         }
     }
 
@@ -127,8 +137,7 @@ class ViewController: UIViewController {
 
     private func setupGuidelines() {
         [horizontalGuide, verticalGuide].forEach {
-            $0.backgroundColor = UIColor.systemRed.withAlphaComponent(0.8)
-            $0.isHidden = true
+            $0.backgroundColor = UIColor.systemYellow.withAlphaComponent(0.8)
             canvasView.addSubview($0)
         }
     }
@@ -148,16 +157,16 @@ class ViewController: UIViewController {
             let dy = currentTouchPoint.y - initialTouchPoint.y
 
             let proposedFrame = initialItemFrame.offsetBy(dx: dx, dy: dy)
-            let adjustedFrame = calculateNewFrame(proposedFrame: proposedFrame)
+            let snapResult = snapper.calculateSnap(for: proposedFrame, anchors: anchors, threshold: snapThreshold)
 
             // Snap happened
-            if adjustedFrame.minX != proposedFrame.minX {
-                let x = horizontalAnchors.first(where: { [adjustedFrame.minX, adjustedFrame.maxX, adjustedFrame.midX].contains($0) }) ?? adjustedFrame.minX
+            if let horizontalAnchor = snapResult.snappedAnchors.first(where: { $0.angle == .pi / 2 })?.point.x {
                 verticalGuide.isHidden = false
-                verticalGuide.frame = CGRect(x: x, y: 0, width: 1, height: canvasView.bounds.height)
 
                 // New snap
-                if adjustedFrame.minX != item.frame.minX {
+                if verticalGuide.frame.minX != horizontalAnchor {
+                    verticalGuide.frame = CGRect(x: horizontalAnchor, y: 0, width: 1, height: canvasView.bounds.height)
+
                     hapticFeedbackGenerator.impactOccurred()
                     hapticFeedbackGenerator.prepare()
                 }
@@ -165,20 +174,21 @@ class ViewController: UIViewController {
                 verticalGuide.isHidden = true
             }
 
-            if adjustedFrame.minY != proposedFrame.minY {
-                let y = verticalAnchors.first(where: { [adjustedFrame.minY, adjustedFrame.maxY, adjustedFrame.midY].contains($0) }) ?? adjustedFrame.minY
+            // Snap happened
+            if let verticalAnchor = snapResult.snappedAnchors.first(where: { $0.angle == 0 })?.point.y {
                 horizontalGuide.isHidden = false
-                horizontalGuide.frame = CGRect(x: 0, y: y, width: canvasView.bounds.width, height: 1)
 
                 // New snap
-                if adjustedFrame.minY != item.frame.minY {
+                if horizontalGuide.frame.minY != verticalAnchor {
+                    horizontalGuide.frame = CGRect(x: 0, y: verticalAnchor, width: canvasView.bounds.width, height: 1)
+
                     hapticFeedbackGenerator.impactOccurred()
                     hapticFeedbackGenerator.prepare()
                 }
             } else {
                 horizontalGuide.isHidden = true
             }
-            item.frame = adjustedFrame
+            item.frame = proposedFrame.offsetBy(dx: snapResult.delta.x, dy: snapResult.delta.y)
 
         case .ended, .cancelled, .failed:
             initialTouchPoint = .zero
@@ -192,33 +202,15 @@ class ViewController: UIViewController {
     }
 
     private func calculateAnchors() {
-        horizontalAnchors = [0, canvasView.frame.width / 2, canvasView.frame.width]
-        horizontalAnchors += canvasView.subviews.filter { $0 != selectedItem && $0 != horizontalGuide && $0 != verticalGuide }.flatMap { [$0.frame.minX, $0.frame.midX, $0.frame.maxX] }
+        var xAnchors = [0, canvasView.frame.width / 2, canvasView.frame.width]
+        xAnchors += canvasView.subviews.filter { $0 != selectedItem && $0 != horizontalGuide && $0 != verticalGuide }.flatMap { [$0.frame.minX, $0.frame.midX, $0.frame.maxX] }
 
-        verticalAnchors = [0, canvasView.frame.height / 2, canvasView.frame.height]
-        verticalAnchors += canvasView.subviews.filter { $0 != selectedItem && $0 != horizontalGuide && $0 != verticalGuide }.flatMap { [$0.frame.minY, $0.frame.midY, $0.frame.maxY] }
-    }
+        var yAnchors = [0, canvasView.frame.height / 2, canvasView.frame.height]
+        yAnchors += canvasView.subviews.filter { $0 != selectedItem && $0 != horizontalGuide && $0 != verticalGuide }.flatMap
+        { [$0.frame.minY, $0.frame.midY, $0.frame.maxY] }
 
-    private func calculateNewFrame(proposedFrame: CGRect) -> CGRect {
-        var dx: CGFloat = 0
-        var dy: CGFloat = 0
-
-        let minHorizontalDistance = horizontalAnchors.flatMap { [$0 - proposedFrame.minX, $0 - proposedFrame.maxX, $0 - proposedFrame.midX] }.min {
-            abs($0) < abs($1)
-        }
-        let minVerticalDistance = verticalAnchors.flatMap { [$0 - proposedFrame.minY, $0 - proposedFrame.maxY, $0 - proposedFrame.midY] }.min {
-            abs($0) < abs($1)
-        }
-
-        if let minHorizontalDistance, abs(minHorizontalDistance) <= snapThreshold {
-            dx = minHorizontalDistance
-        }
-
-        if let minVerticalDistance, abs(minVerticalDistance) <= snapThreshold {
-            dy = minVerticalDistance
-        }
-
-        return proposedFrame.offsetBy(dx: dx, dy: dy)
+        anchors = xAnchors.map { Anchor(point: CGPoint(x: $0, y: 0), angle: .pi / 2) } +
+                  yAnchors.map { Anchor(point: CGPoint(x: 0, y: $0), angle: .zero) }
     }
 
     // MARK: Item adder methods
@@ -271,7 +263,7 @@ class ViewController: UIViewController {
     }
 }
 
-extension ViewController: UIScrollViewDelegate {
+extension CanvasViewController: UIScrollViewDelegate {
 
     func viewForZooming(in scrollView: UIScrollView) -> UIView? {
         canvasView
@@ -281,3 +273,43 @@ extension ViewController: UIScrollViewDelegate {
         centerCanvas()
     }
 }
+
+#if DEBUG
+extension CanvasViewController {
+    // Helper method to add an item to the canvas at a specified location
+    func addTestItem(_ item: UIView) {
+        canvasView.addSubview(item)
+        select(item: item)
+    }
+
+    // Helper method to simulate panning an item
+    func simulatePan(from startPoint: CGPoint, to endPoint: CGPoint) {
+        let panGesture1 = MockPanGestureRecognizer(translation: .zero, location: .init(x: startPoint.x, y: startPoint.y), state: .began)
+        handlePan(panGesture1)
+
+        let panGesture2 = MockPanGestureRecognizer(translation: .zero, location: .init(x: endPoint.x, y: endPoint.y), state: .changed)
+        handlePan(panGesture2)
+    }
+}
+
+class MockPanGestureRecognizer: UIPanGestureRecognizer {
+    private let mockLocation: CGPoint
+    private let mockState: UIGestureRecognizer.State
+
+    init(translation: CGPoint, location: CGPoint, state: UIGestureRecognizer.State) {
+        self.mockLocation = location
+        self.mockState = state
+
+        super.init(target: nil, action: nil)
+    }
+
+    override func location(in view: UIView?) -> CGPoint {
+        return mockLocation
+    }
+
+    override var state: UIGestureRecognizer.State {
+        get { mockState }
+        set { /* ignore, static mock */ }
+    }
+}
+#endif
