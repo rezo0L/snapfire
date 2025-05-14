@@ -11,6 +11,10 @@ class ViewController: UIViewController {
 
     // MARK: Canvas properties
 
+    // Magic numbers: no specific requirement, it just looks good
+    private let canvasSize = CGSize(width: UIScreen.main.bounds.width,
+                                    height: UIScreen.main.bounds.width * 0.6)
+
     private lazy var scrollView: UIScrollView = {
         let scrollView = UIScrollView()
         scrollView.minimumZoomScale = 0.5 // Magic number: no specific requirement, feel free to play around with it
@@ -21,8 +25,7 @@ class ViewController: UIViewController {
     }()
 
     private lazy var canvasView: UIView = {
-        let screenWidth = UIScreen.main.bounds.width * 0.8 // Magic number: no specific requirement, it just looks good
-        let canvas = UIView(frame: CGRect(origin: .zero, size: .init(width: screenWidth, height: screenWidth)))
+        let canvas = UIView(frame: CGRect(origin: .zero, size: canvasSize))
         canvas.backgroundColor = .white
         return canvas
     }()
@@ -54,6 +57,7 @@ class ViewController: UIViewController {
         setupCanvas()
         setupItemSelector()
         setupItemDragger()
+        setupItemAdder()
     }
 
     // MARK: Canvas methods
@@ -83,8 +87,6 @@ class ViewController: UIViewController {
     private func setupItemSelector() {
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleCanvasTap(_:)))
         canvasView.addGestureRecognizer(tapGesture)
-
-        addTestItems()
     }
 
     @objc private func handleCanvasTap(_ gesture: UITapGestureRecognizer) {
@@ -111,16 +113,6 @@ class ViewController: UIViewController {
     private func deselectItem() {
         selectedItem?.layer.borderWidth = 0
         selectedItem = nil
-    }
-
-    func addTestItems() {
-        let item1 = UIView(frame: CGRect(x: 50, y: 50, width: 100, height: 100))
-        item1.backgroundColor = .blue
-        canvasView.addSubview(item1)
-
-        let item2 = UIView(frame: CGRect(x: 250, y: 250, width: 50, height: 50))
-        item2.backgroundColor = .green
-        canvasView.addSubview(item2)
     }
 
     // MARK: Item dragger methods
@@ -227,6 +219,55 @@ class ViewController: UIViewController {
         }
 
         return proposedFrame.offsetBy(dx: dx, dy: dy)
+    }
+
+    // MARK: Item adder methods
+
+    private func setupItemAdder() {
+        let button = UIButton(type: .system)
+        button.setImage(UIImage(systemName: "plus"), for: .normal)
+        button.tintColor = .black
+        button.backgroundColor = .white
+        button.layer.cornerRadius = 25
+        button.addTarget(self, action: #selector(showItemPicker), for: .touchUpInside)
+
+        view.addSubview(button)
+        button.translatesAutoresizingMaskIntoConstraints = false
+
+        NSLayoutConstraint.activate([
+            button.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
+            button.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -48),
+            button.widthAnchor.constraint(equalToConstant: 50),
+            button.heightAnchor.constraint(equalToConstant: 50),
+        ])
+    }
+
+    @objc private func showItemPicker() {
+        let viewController = ItemPickerViewController()
+        viewController.modalPresentationStyle = .pageSheet
+
+        if let sheet = viewController.sheetPresentationController {
+            sheet.detents = [.medium(), .large()]
+            sheet.prefersGrabberVisible = true
+        }
+
+        viewController.onItemSelected = { [weak self] item in
+            self?.addItem(item)
+        }
+
+        present(viewController, animated: true)
+    }
+
+    private func addItem(_ item: UIImage) {
+        let itemHeight = canvasSize.height / 4
+        let factor = itemHeight / item.size.height
+
+        let imageView = UIImageView(image: item)
+        imageView.frame = CGRect(x: 0, y: 0, width: item.size.width * factor, height: item.size.height * factor)
+        imageView.isUserInteractionEnabled = true
+
+        canvasView.addSubview(imageView)
+        select(item: imageView)
     }
 }
 
