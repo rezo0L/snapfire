@@ -16,22 +16,22 @@ final class AxisSnapperTests: XCTestCase {
 
     func testSnapsToHorizontalAnchor_minX() {
         let frame = CGRect(x: 95, y: 100, width: 20, height: 20)
-        let anchor = Anchor(point: CGPoint(x: 100, y: 0), angle: .zero)
+        let anchor = Anchor(point: CGPoint(x: 100, y: 0), angle: .pi / 2)
 
         let result = snapper.calculateSnap(for: frame, anchors: [anchor], threshold: threshold)
 
-        XCTAssertEqual(result.origin.x, 100)
-        XCTAssertEqual(result.origin.y, 100)
+        XCTAssertEqual(result.delta.x, 5)
+        XCTAssertEqual(result.delta.y, 0)
     }
 
     func testSnapsToVerticalAnchor_minY() {
         let frame = CGRect(x: 100, y: 95, width: 20, height: 20)
-        let anchor = Anchor(point: CGPoint(x: 0, y: 100), angle: .pi / 2)
+        let anchor = Anchor(point: CGPoint(x: 0, y: 100), angle: .zero)
 
         let result = snapper.calculateSnap(for: frame, anchors: [anchor], threshold: threshold)
 
-        XCTAssertEqual(result.origin.x, 100)
-        XCTAssertEqual(result.origin.y, 100)
+        XCTAssertEqual(result.delta.x, 0)
+        XCTAssertEqual(result.delta.y, 5)
     }
 
     func testDoesNotSnap_whenOutsideThreshold() {
@@ -40,21 +40,21 @@ final class AxisSnapperTests: XCTestCase {
 
         let result = snapper.calculateSnap(for: frame, anchors: [anchor], threshold: threshold)
 
-        XCTAssertEqual(result.origin.x, 50)
-        XCTAssertEqual(result.origin.y, 50)
+        XCTAssertEqual(result.delta.x, 0)
+        XCTAssertEqual(result.delta.y, 0)
     }
 
     func testSnapsToBothHorizontalAndVertical() {
         let frame = CGRect(x: 95, y: 96, width: 20, height: 20)
         let anchors = [
-            Anchor(point: CGPoint(x: 100, y: 0), angle: .zero),
-            Anchor(point: CGPoint(x: 0, y: 100), angle: .pi / 2)
+            Anchor(point: CGPoint(x: 100, y: 0), angle: .pi / 2),
+            Anchor(point: CGPoint(x: 0, y: 100), angle: .zero)
         ]
 
         let result = snapper.calculateSnap(for: frame, anchors: anchors, threshold: threshold)
 
-        XCTAssertEqual(result.origin.x, 100)
-        XCTAssertEqual(result.origin.y, 100)
+        XCTAssertEqual(result.delta.x, 5)
+        XCTAssertEqual(result.delta.y, 4)
     }
 
     func testNoAnchorsResultsInNoSnap() {
@@ -62,7 +62,7 @@ final class AxisSnapperTests: XCTestCase {
 
         let result = snapper.calculateSnap(for: frame, anchors: [], threshold: threshold)
 
-        XCTAssertEqual(result.origin.x, 40)
-        XCTAssertEqual(result.origin.y, 40)
+        XCTAssertEqual(result.delta.x, 0)
+        XCTAssertEqual(result.delta.y, 0)
     }
 }
