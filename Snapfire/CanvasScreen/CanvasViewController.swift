@@ -1,5 +1,5 @@
 //
-//  ViewController.swift
+//  CanvasViewController.swift
 //  Snapfire
 //
 //  Created by Reza on 2025-05-11.
@@ -7,7 +7,7 @@
 
 import UIKit
 
-class ViewController: UIViewController {
+class CanvasViewController: UIViewController {
 
     init(snapper: Snapper = AxisSnapper()) {
         self.snapper = snapper
@@ -265,7 +265,7 @@ class ViewController: UIViewController {
     }
 }
 
-extension ViewController: UIScrollViewDelegate {
+extension CanvasViewController: UIScrollViewDelegate {
 
     func viewForZooming(in scrollView: UIScrollView) -> UIView? {
         canvasView
@@ -275,3 +275,43 @@ extension ViewController: UIScrollViewDelegate {
         centerCanvas()
     }
 }
+
+#if DEBUG
+extension CanvasViewController {
+    // Helper method to add an item to the canvas at a specified location
+    func addTestItem(_ item: UIView) {
+        canvasView.addSubview(item)
+        select(item: item)
+    }
+
+    // Helper method to simulate panning an item
+    func simulatePan(from startPoint: CGPoint, to endPoint: CGPoint) {
+        let panGesture1 = MockPanGestureRecognizer(translation: .zero, location: .init(x: startPoint.x, y: startPoint.y), state: .began)
+        handlePan(panGesture1)
+
+        let panGesture2 = MockPanGestureRecognizer(translation: .zero, location: .init(x: endPoint.x, y: endPoint.y), state: .changed)
+        handlePan(panGesture2)
+    }
+}
+
+class MockPanGestureRecognizer: UIPanGestureRecognizer {
+    private let mockLocation: CGPoint
+    private let mockState: UIGestureRecognizer.State
+
+    init(translation: CGPoint, location: CGPoint, state: UIGestureRecognizer.State) {
+        self.mockLocation = location
+        self.mockState = state
+
+        super.init(target: nil, action: nil)
+    }
+
+    override func location(in view: UIView?) -> CGPoint {
+        return mockLocation
+    }
+
+    override var state: UIGestureRecognizer.State {
+        get { mockState }
+        set { /* ignore, static mock */ }
+    }
+}
+#endif
