@@ -9,6 +9,16 @@ import UIKit
 
 class ViewController: UIViewController {
 
+    init(snapper: Snapper = AxisSnapper()) {
+        self.snapper = snapper
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        self.snapper = AxisSnapper()
+        super.init(coder: coder)
+    }
+    
     // MARK: Canvas properties
 
     // Magic numbers: no specific requirement, it just looks good
@@ -48,6 +58,8 @@ class ViewController: UIViewController {
 
     private let horizontalGuide = UIView()
     private let verticalGuide = UIView()
+
+    private let snapper: Snapper
 
     // MARK: View lifecycle
 
@@ -105,8 +117,8 @@ class ViewController: UIViewController {
             selectedItem = item
             calculateAnchors()
 
-            item.layer.borderColor = UIColor.yellow.cgColor
-            item.layer.borderWidth = 3
+            item.layer.borderColor = UIColor.systemBlue.cgColor
+            item.layer.borderWidth = 1
         }
     }
 
@@ -127,8 +139,7 @@ class ViewController: UIViewController {
 
     private func setupGuidelines() {
         [horizontalGuide, verticalGuide].forEach {
-            $0.backgroundColor = UIColor.systemRed.withAlphaComponent(0.8)
-            $0.isHidden = true
+            $0.backgroundColor = UIColor.systemYellow.withAlphaComponent(0.8)
             canvasView.addSubview($0)
         }
     }
@@ -148,7 +159,12 @@ class ViewController: UIViewController {
             let dy = currentTouchPoint.y - initialTouchPoint.y
 
             let proposedFrame = initialItemFrame.offsetBy(dx: dx, dy: dy)
-            let adjustedFrame = calculateNewFrame(proposedFrame: proposedFrame)
+            let adjustedFrame = snapper.calculateSnap(
+                for: proposedFrame,
+                anchors: horizontalAnchors.map { Anchor(point: CGPoint(x: $0, y: 0), angle: .zero) } +
+                         verticalAnchors.map { Anchor(point: CGPoint(x: 0, y: $0), angle: .pi / 2) },
+                threshold: snapThreshold
+            )
 
             // Snap happened
             if adjustedFrame.minX != proposedFrame.minX {
@@ -197,28 +213,6 @@ class ViewController: UIViewController {
 
         verticalAnchors = [0, canvasView.frame.height / 2, canvasView.frame.height]
         verticalAnchors += canvasView.subviews.filter { $0 != selectedItem && $0 != horizontalGuide && $0 != verticalGuide }.flatMap { [$0.frame.minY, $0.frame.midY, $0.frame.maxY] }
-    }
-
-    private func calculateNewFrame(proposedFrame: CGRect) -> CGRect {
-        var dx: CGFloat = 0
-        var dy: CGFloat = 0
-
-        let minHorizontalDistance = horizontalAnchors.flatMap { [$0 - proposedFrame.minX, $0 - proposedFrame.maxX, $0 - proposedFrame.midX] }.min {
-            abs($0) < abs($1)
-        }
-        let minVerticalDistance = verticalAnchors.flatMap { [$0 - proposedFrame.minY, $0 - proposedFrame.maxY, $0 - proposedFrame.midY] }.min {
-            abs($0) < abs($1)
-        }
-
-        if let minHorizontalDistance, abs(minHorizontalDistance) <= snapThreshold {
-            dx = minHorizontalDistance
-        }
-
-        if let minVerticalDistance, abs(minVerticalDistance) <= snapThreshold {
-            dy = minVerticalDistance
-        }
-
-        return proposedFrame.offsetBy(dx: dx, dy: dy)
     }
 
     // MARK: Item adder methods
