@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F53B31C12DD56356004504E4 /* SDWebImage in Frameworks */ = {isa = PBXBuildFile; productRef = F53B31C02DD56356004504E4 /* SDWebImage */; };
 		F5A779CF2DD4C94100CDC607 /* SnapshotTesting in Frameworks */ = {isa = PBXBuildFile; productRef = F5A779CE2DD4C94100CDC607 /* SnapshotTesting */; };
 /* End PBXBuildFile section */
 
@@ -29,7 +30,7 @@
 		F5A0CB5E2DD11749007237E1 /* Exceptions for "Snapfire" folder in "Snapfire" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Info.plist,
+				Application/Info.plist,
 			);
 			target = F5A0CB352DD11748007237E1 /* Snapfire */;
 		};
@@ -56,6 +57,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F53B31C12DD56356004504E4 /* SDWebImage in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -108,6 +110,7 @@
 			);
 			name = Snapfire;
 			packageProductDependencies = (
+				F53B31C02DD56356004504E4 /* SDWebImage */,
 			);
 			productName = Snapfire;
 			productReference = F5A0CB362DD11748007237E1 /* Snapfire.app */;
@@ -167,6 +170,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				F5A779CD2DD4C94100CDC607 /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */,
+				F53B31BF2DD56356004504E4 /* XCRemoteSwiftPackageReference "SDWebImage" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = F5A0CB372DD11748007237E1 /* Products */;
@@ -230,7 +234,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = Snapfire/Info.plist;
+				INFOPLIST_FILE = Snapfire/Application/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -258,7 +262,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = Snapfire/Info.plist;
+				INFOPLIST_FILE = Snapfire/Application/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = Main;
@@ -466,6 +470,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		F53B31BF2DD56356004504E4 /* XCRemoteSwiftPackageReference "SDWebImage" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SDWebImage/SDWebImage.git";
+			requirement = {
+				kind = exactVersion;
+				version = 5.21.0;
+			};
+		};
 		F5A779CD2DD4C94100CDC607 /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/pointfreeco/swift-snapshot-testing";
@@ -477,6 +489,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		F53B31C02DD56356004504E4 /* SDWebImage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F53B31BF2DD56356004504E4 /* XCRemoteSwiftPackageReference "SDWebImage" */;
+			productName = SDWebImage;
+		};
 		F5A779CE2DD4C94100CDC607 /* SnapshotTesting */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = F5A779CD2DD4C94100CDC607 /* XCRemoteSwiftPackageReference "swift-snapshot-testing" */;
