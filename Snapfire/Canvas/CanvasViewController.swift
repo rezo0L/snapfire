@@ -145,17 +145,23 @@ class CanvasViewController: UIViewController {
 
     private func updateGuides(xAnchor: CGFloat?, yAnchor: CGFloat?) {
         if let x = xAnchor {
+            if verticalGuide.isHidden {
+                hapticFeedbackGenerator.impactOccurred()
+            }
+
             verticalGuide.isHidden = false
             verticalGuide.frame = CGRect(x: x, y: 0, width: 1, height: canvasView.bounds.height)
-            hapticFeedbackGenerator.impactOccurred()
         } else {
             verticalGuide.isHidden = true
         }
 
         if let y = yAnchor {
+            if horizontalGuide.isHidden {
+                hapticFeedbackGenerator.impactOccurred()
+            }
+
             horizontalGuide.isHidden = false
             horizontalGuide.frame = CGRect(x: 0, y: y, width: canvasView.bounds.width, height: 1)
-            hapticFeedbackGenerator.impactOccurred()
         } else {
             horizontalGuide.isHidden = true
         }
