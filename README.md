@@ -2,7 +2,7 @@
 
 An iOS application that offers an interactive canvas where users can add and move elements, featuring zoom, scroll, and smart alignment guides.
 
-![GitHub](https://img.shields.io/github/license/rezo0L/snapfire) ![GitHub release (latest by date)](https://img.shields.io/github/v/release/rezo0L/snapfire)
+![GitHub](https://img.shields.io/github/license/rezo0L/snapfire) ![GitHub release (latest by date)](https://img.shields.io/github/release/rezo0L/snapfire)
 
 The name of the project is inspired by a hero in [Dota 2](https://www.dota2.com).
 
