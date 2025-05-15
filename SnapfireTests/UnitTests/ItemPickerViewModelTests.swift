@@ -18,7 +18,9 @@ final class ItemPickerViewModelTests: XCTestCase {
         let items = Array(repeating: Category.Item(sourceURL: sourceURL), count: 50)
         let category = Category(title: title, items: items)
 
-        let viewModel = ItemPickerViewModel(categories: [category])
+        let viewModel = ItemPickerViewModel(overlayService: MockOverlayService(categories: [category]))
+        _ = try waitForFirstValue(from: viewModel.$sections)
+
         let section = try XCTUnwrap(viewModel.sections.first)
 
         XCTAssertEqual(section.title, title)
@@ -37,7 +39,8 @@ final class ItemPickerViewModelTests: XCTestCase {
         let category1 = Category(title: "Cats", items: Array(repeating: .init(sourceURL: sourceURL), count: 20))
         let category2 = Category(title: "Dogs", items: Array(repeating: .init(sourceURL: sourceURL), count: 8))
 
-        let viewModel = ItemPickerViewModel(categories: [category1, category2])
+        let viewModel = ItemPickerViewModel(overlayService: MockOverlayService(categories: [category1, category2]))
+        _ = try waitForFirstValue(from: viewModel.$sections)
 
         XCTAssertEqual(viewModel.sections.count, 2)
 
@@ -53,7 +56,9 @@ final class ItemPickerViewModelTests: XCTestCase {
         let category1 = Category(title: "Emojis", items: items)
         let category2 = Category(title: "Faces", items: items)
 
-        let viewModel = ItemPickerViewModel(categories: [category1, category2])
+        let viewModel = ItemPickerViewModel(overlayService: MockOverlayService(categories: [category1, category2]))
+        _ = try waitForFirstValue(from: viewModel.$sections)
+
         let section = try XCTUnwrap(viewModel.sections.first)
 
         XCTAssertEqual(section.items.count, 12)
@@ -70,7 +75,9 @@ final class ItemPickerViewModelTests: XCTestCase {
         let category = Category(title: "Icons", items: items)
         let image = UIImage()
 
-        let viewModel = ItemPickerViewModel(categories: [category])
+        let viewModel = ItemPickerViewModel(overlayService: MockOverlayService(categories: [category]))
+        _ = try waitForFirstValue(from: viewModel.$sections)
+
         let indexPath = IndexPath(item: 0, section: 0)
         let action = try XCTUnwrap(viewModel.navigationAction(for: indexPath, selectedImage: image))
 
@@ -87,7 +94,9 @@ final class ItemPickerViewModelTests: XCTestCase {
         let category1 = Category(title: "More", items: items)
         let category2 = Category(title: "Other", items: items)
 
-        let viewModel = ItemPickerViewModel(categories: [category1, category2])
+        let viewModel = ItemPickerViewModel(overlayService: MockOverlayService(categories: [category1, category2]))
+        _ = try waitForFirstValue(from: viewModel.$sections)
+
         let indexPath = IndexPath(item: 11, section: 0)
         let action = try XCTUnwrap(viewModel.navigationAction(for: indexPath, selectedImage: nil))
 
@@ -101,11 +110,13 @@ final class ItemPickerViewModelTests: XCTestCase {
         }
     }
 
-    func testNavigationAction_returnsNil_whenImageIsMissing() {
+    func testNavigationAction_returnsNil_whenImageIsMissing() throws {
         let items = [Category.Item(sourceURL: sourceURL)]
         let category = Category(title: "Stickers", items: items)
 
-        let viewModel = ItemPickerViewModel(categories: [category])
+        let viewModel = ItemPickerViewModel(overlayService: MockOverlayService(categories: [category]))
+        _ = try waitForFirstValue(from: viewModel.$sections)
+
         let indexPath = IndexPath(item: 0, section: 0)
         let action = viewModel.navigationAction(for: indexPath, selectedImage: nil)
 

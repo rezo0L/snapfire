@@ -43,6 +43,11 @@ class CanvasViewController: UIViewController {
 
     // MARK: Initializers and view lifecycle methods
 
+    init() {
+        self.viewModel = .init(canvasSize: canvasSize)
+        super.init(nibName: nil, bundle: nil)
+    }
+
     required init?(coder: NSCoder) {
         self.viewModel = .init(canvasSize: canvasSize)
         super.init(coder: coder)
