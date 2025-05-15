@@ -21,7 +21,7 @@ class ItemPickerViewControllerTests: XCTestCase {
             Category(title: "Category 2", items: Array(repeating: .init(sourceURL: sourceURL), count: 12)),
             Category(title: "Category 3", items: Array(repeating: .init(sourceURL: sourceURL), count: 19)),
         ]
-        let viewModel = ItemPickerViewModel(categories: categories)
+        let viewModel = ItemPickerViewModel(overlayService: MockOverlayService(categories: categories))
         let viewController = ItemPickerViewController(viewModel: viewModel)
         assertSnapshot(of: viewController.view, as: .image)
     }
@@ -30,7 +30,7 @@ class ItemPickerViewControllerTests: XCTestCase {
         let categories: [Snapfire.Category] = [
             Category(title: "Category 3", items: Array(repeating: .init(sourceURL: sourceURL), count: 19))
         ]
-        let viewModel = ItemPickerViewModel(categories: categories)
+        let viewModel = ItemPickerViewModel(overlayService: MockOverlayService(categories: categories))
         let viewController = ItemPickerViewController(viewModel: viewModel)
         assertSnapshot(of: viewController.view, as: .image)
     }
