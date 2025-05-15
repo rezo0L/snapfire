@@ -9,33 +9,12 @@ import UIKit
 
 class CanvasViewController: UIViewController {
 
-    private let viewModel: CanvasViewModel
-    private var selectedItem: UIView? { viewModel.selectedItem }
-
-    init(viewModel: CanvasViewModel = .init()) {
-        self.viewModel = viewModel
-        super.init(nibName: nil, bundle: nil)
-    }
-
-    required init?(coder: NSCoder) {
-        self.viewModel = .init()
-        super.init(coder: coder)
-    }
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-
-        setupCanvas()
-        setupItemSelector()
-        setupItemDragger()
-        setupItemAdder()
-    }
-
     // MARK: Canvas properties
 
     // Magic numbers: no specific requirement, it just looks good
-    private let canvasSize = CGSize(width: UIScreen.main.bounds.width,
-                                    height: UIScreen.main.bounds.width * 0.6)
+    private let canvasSize = CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.width * 0.6)
+    private let viewModel: CanvasViewModel
+    private var selectedItem: UIView? { viewModel.selectedItem }
 
     private lazy var scrollView: UIScrollView = {
         let scrollView = UIScrollView()
@@ -54,9 +33,6 @@ class CanvasViewController: UIViewController {
 
     // MARK: Item dragger properties
 
-    private var anchors = [Anchor]()
-    private let snapThreshold: CGFloat = 1 // Magic number: it just works well
-
     private var initialTouchPoint: CGPoint = .zero
     private var initialItemFrame: CGRect = .zero
 
@@ -64,6 +40,22 @@ class CanvasViewController: UIViewController {
 
     private let horizontalGuide = UIView()
     private let verticalGuide = UIView()
+
+    // MARK: Initializers and view lifecycle methods
+
+    required init?(coder: NSCoder) {
+        self.viewModel = .init(canvasSize: canvasSize)
+        super.init(coder: coder)
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        setupCanvas()
+        setupItemSelector()
+        setupItemDragger()
+        setupItemAdder()
+    }
 
     // MARK: Canvas methods
 

@@ -18,9 +18,7 @@ final class CanvasViewModel {
 
     private var itemPickerViewModelReference: ItemPickerViewModel?
 
-    init(snapper: Snapper = AxisSnapper(),
-         canvasSize: CGSize = CGSize(width: UIScreen.main.bounds.width,
-                                     height: UIScreen.main.bounds.width * 0.6)) {
+    init(snapper: Snapper = AxisSnapper(), canvasSize: CGSize) {
         self.snapper = snapper
         self.canvasSize = canvasSize
     }
