@@ -5,23 +5,15 @@
 //  Created by Reza on 2025-05-14.
 //
 
+import SDWebImage
 import UIKit
 
 final class ItemPickerCollectionViewCell: UICollectionViewCell {
     static let identifier = "ItemPickerCollectionViewCell"
 
-    enum Content {
-        case image(URL)
-        case label(String)
-    }
-
-    var content: Content?
-
     var image: UIImage? {
         imageView.image
     }
-
-    private var task: Task<Void, Never>?
 
     private let imageView: UIImageView = {
         let imageView = UIImageView()
@@ -33,7 +25,6 @@ final class ItemPickerCollectionViewCell: UICollectionViewCell {
         let label = UILabel()
         label.textAlignment = .center
         label.font = UIFont.systemFont(ofSize: 18, weight: .bold)
-        label.textColor = .black
         return label
     }()
 
@@ -61,12 +52,11 @@ final class ItemPickerCollectionViewCell: UICollectionViewCell {
         contentView.layer.borderWidth = 1
         contentView.layer.cornerRadius = 10
         contentView.layer.borderColor = UIColor.systemGray4.cgColor
+        contentView.backgroundColor = .secondarySystemBackground
     }
 
     override func prepareForReuse() {
         super.prepareForReuse()
-
-        task?.cancel()
 
         label.text = nil
         imageView.image = nil
@@ -76,16 +66,12 @@ final class ItemPickerCollectionViewCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
 
-    func configure(with content: Content) {
-        self.content = content
-
+    func setContent(_ content: ItemPickerViewModel.Section.Content) {
         switch content {
         case let .image(url):
             label.isHidden = true
             imageView.isHidden = false
-            task = Task {
-                imageView.image = try? await UIImage.from(url: url)
-            }
+            imageView.sd_setImage(with: url)
 
         case let .label(text):
             label.isHidden = false

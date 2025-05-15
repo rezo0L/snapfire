@@ -5,17 +5,18 @@
 //  Created by Reza on 2025-05-14.
 //
 
+import Combine
 import UIKit
 
 final class ItemPickerViewController: UIViewController {
     var onItemSelected: ((UIImage) -> Void)?
 
-    private let overlays: [Category]
-    private let maximumItemsPerSection: Int
+    private let viewModel: ItemPickerViewModel
+    private var cancellables = Set<AnyCancellable>()
 
     private lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
-        layout.itemSize = CGSize(width: 60, height: 60)
+        layout.itemSize = CGSize(width: 72, height: 72)
         layout.minimumInteritemSpacing = 16
         layout.minimumLineSpacing = 16
         layout.sectionInset = UIEdgeInsets(top: 16, left: 16, bottom: 32, right: 16)
@@ -32,9 +33,8 @@ final class ItemPickerViewController: UIViewController {
         return collectionView
     }()
 
-    init(overlays: [Category]) {
-        self.overlays = overlays
-        self.maximumItemsPerSection = overlays.count > 1 ? 12 : .max
+    init(viewModel: ItemPickerViewModel) {
+        self.viewModel = viewModel
 
         super.init(nibName: nil, bundle: nil)
 
@@ -58,12 +58,19 @@ final class ItemPickerViewController: UIViewController {
             collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
         ])
+
+        viewModel.$sections
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.collectionView.reloadData()
+            }
+            .store(in: &cancellables)
     }
 }
 
 extension ItemPickerViewController: UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
     func numberOfSections(in collectionView: UICollectionView) -> Int {
-        overlays.count
+        viewModel.sections.count
     }
 
     func collectionView(_ collectionView: UICollectionView,
@@ -78,7 +85,7 @@ extension ItemPickerViewController: UICollectionViewDataSource, UICollectionView
             return UICollectionReusableView()
         }
 
-        header.configure(with: overlays[indexPath.section].title)
+        header.configure(with: viewModel.sections[indexPath.section].title)
         return header
     }
 
@@ -89,7 +96,7 @@ extension ItemPickerViewController: UICollectionViewDataSource, UICollectionView
     }
 
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        min(overlays[section].items.count, maximumItemsPerSection)
+        viewModel.sections[section].items.count
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -98,40 +105,25 @@ extension ItemPickerViewController: UICollectionViewDataSource, UICollectionView
             preconditionFailure()
         }
 
-        let content: ItemPickerCollectionViewCell.Content
-        if indexPath.item == maximumItemsPerSection - 1 && overlays[indexPath.section].items.count > maximumItemsPerSection {
-            content = .label("+\(overlays[indexPath.section].items.count - maximumItemsPerSection + 1)")
-        } else {
-            content = .image(overlays[indexPath.section].items[indexPath.item].sourceURL)
-        }
-        cell.configure(with: content)
+        let content = viewModel.sections[indexPath.section].items[indexPath.item]
+        cell.setContent(content)
         return cell
     }
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         guard let cell = collectionView.cellForItem(at: indexPath) as? ItemPickerCollectionViewCell,
-              let content = cell.content else {
+              let action = viewModel.navigationAction(for: indexPath, selectedImage: cell.image) else {
             return
         }
 
-        switch content {
-        case .image:
-            guard let image = cell.image else { return }
-            dismiss(animated: true) {
-                self.onItemSelected?(image)
-            }
+        switch action {
+        case .showImage(let image):
+            dismiss(animated: true) { self.onItemSelected?(image) }
 
-        case .label:
-            let category = overlays[indexPath.section]
-            showCategoryOverlays(category: category)
+        case .showCategory(let nextViewModel):
+            let viewController = ItemPickerViewController(viewModel: nextViewModel)
+            viewController.onItemSelected = self.onItemSelected
+            navigationController?.pushViewController(viewController, animated: true)
         }
-    }
-
-    private func showCategoryOverlays(category: Category) {
-        let viewController = ItemPickerViewController(overlays: [category])
-        viewController.onItemSelected = { [weak self] image in
-            self?.onItemSelected?(image)
-        }
-        navigationController?.pushViewController(viewController, animated: true)
     }
 }

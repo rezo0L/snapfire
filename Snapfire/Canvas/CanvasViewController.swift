@@ -9,16 +9,28 @@ import UIKit
 
 class CanvasViewController: UIViewController {
 
-    init(snapper: Snapper = AxisSnapper()) {
-        self.snapper = snapper
+    private let viewModel: CanvasViewModel
+    private var selectedItem: UIView? { viewModel.selectedItem }
+
+    init(viewModel: CanvasViewModel = .init()) {
+        self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
 
     required init?(coder: NSCoder) {
-        self.snapper = AxisSnapper()
+        self.viewModel = .init()
         super.init(coder: coder)
     }
-    
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        setupCanvas()
+        setupItemSelector()
+        setupItemDragger()
+        setupItemAdder()
+    }
+
     // MARK: Canvas properties
 
     // Magic numbers: no specific requirement, it just looks good
@@ -40,10 +52,6 @@ class CanvasViewController: UIViewController {
         return canvas
     }()
 
-    // MARK: Item selector properties
-
-    private var selectedItem: UIView?
-
     // MARK: Item dragger properties
 
     private var anchors = [Anchor]()
@@ -56,26 +64,6 @@ class CanvasViewController: UIViewController {
 
     private let horizontalGuide = UIView()
     private let verticalGuide = UIView()
-
-    private let snapper: Snapper
-
-    // MARK: Fetch items methods
-    private var overlays: [Category] = []
-
-    // MARK: View lifecycle
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-
-        setupCanvas()
-        setupItemSelector()
-        setupItemDragger()
-        setupItemAdder()
-
-        Task {
-            self.overlays = await fetchItems()
-        }
-    }
 
     // MARK: Canvas methods
 
@@ -108,28 +96,11 @@ class CanvasViewController: UIViewController {
 
     @objc private func handleCanvasTap(_ gesture: UITapGestureRecognizer) {
         let location = gesture.location(in: canvasView)
-
         if let tappedItem = canvasView.subviews.first(where: { $0.frame.contains(location) }) {
-            select(item: tappedItem)
+            viewModel.select(item: tappedItem, in: canvasView)
         } else {
-            deselectItem()
+            viewModel.deselectItem()
         }
-    }
-
-    private func select(item: UIView) {
-        if selectedItem != item {
-            deselectItem()
-            selectedItem = item
-            calculateAnchors()
-
-            item.layer.borderColor = UIColor.systemBlue.cgColor
-            item.layer.borderWidth = 1
-        }
-    }
-
-    private func deselectItem() {
-        selectedItem?.layer.borderWidth = 0
-        selectedItem = nil
     }
 
     // MARK: Item dragger methods
@@ -164,38 +135,10 @@ class CanvasViewController: UIViewController {
             let dy = currentTouchPoint.y - initialTouchPoint.y
 
             let proposedFrame = initialItemFrame.offsetBy(dx: dx, dy: dy)
-            let snapResult = snapper.calculateSnap(for: proposedFrame, anchors: anchors, threshold: snapThreshold)
+            let (snappedFrame, xAnchor, yAnchor) = viewModel.snapFrame(proposedFrame)
 
-            // Snap happened
-            if let horizontalAnchor = snapResult.snappedAnchors.first(where: { $0.angle == .pi / 2 })?.point.x {
-                verticalGuide.isHidden = false
-
-                // New snap
-                if verticalGuide.frame.minX != horizontalAnchor {
-                    verticalGuide.frame = CGRect(x: horizontalAnchor, y: 0, width: 1, height: canvasView.bounds.height)
-
-                    hapticFeedbackGenerator.impactOccurred()
-                    hapticFeedbackGenerator.prepare()
-                }
-            } else {
-                verticalGuide.isHidden = true
-            }
-
-            // Snap happened
-            if let verticalAnchor = snapResult.snappedAnchors.first(where: { $0.angle == 0 })?.point.y {
-                horizontalGuide.isHidden = false
-
-                // New snap
-                if horizontalGuide.frame.minY != verticalAnchor {
-                    horizontalGuide.frame = CGRect(x: 0, y: verticalAnchor, width: canvasView.bounds.width, height: 1)
-
-                    hapticFeedbackGenerator.impactOccurred()
-                    hapticFeedbackGenerator.prepare()
-                }
-            } else {
-                horizontalGuide.isHidden = true
-            }
-            item.frame = proposedFrame.offsetBy(dx: snapResult.delta.x, dy: snapResult.delta.y)
+            item.frame = snappedFrame
+            updateGuides(xAnchor: xAnchor, yAnchor: yAnchor)
 
         case .ended, .cancelled, .failed:
             initialTouchPoint = .zero
@@ -208,16 +151,23 @@ class CanvasViewController: UIViewController {
         }
     }
 
-    private func calculateAnchors() {
-        var xAnchors = [0, canvasView.frame.width / 2, canvasView.frame.width]
-        xAnchors += canvasView.subviews.filter { $0 != selectedItem && $0 != horizontalGuide && $0 != verticalGuide }.flatMap { [$0.frame.minX, $0.frame.midX, $0.frame.maxX] }
+    private func updateGuides(xAnchor: CGFloat?, yAnchor: CGFloat?) {
+        if let x = xAnchor {
+            verticalGuide.isHidden = false
+            verticalGuide.frame = CGRect(x: x, y: 0, width: 1, height: canvasView.bounds.height)
+            hapticFeedbackGenerator.impactOccurred()
+        } else {
+            verticalGuide.isHidden = true
+        }
 
-        var yAnchors = [0, canvasView.frame.height / 2, canvasView.frame.height]
-        yAnchors += canvasView.subviews.filter { $0 != selectedItem && $0 != horizontalGuide && $0 != verticalGuide }.flatMap
-        { [$0.frame.minY, $0.frame.midY, $0.frame.maxY] }
-
-        anchors = xAnchors.map { Anchor(point: CGPoint(x: $0, y: 0), angle: .pi / 2) } +
-                  yAnchors.map { Anchor(point: CGPoint(x: 0, y: $0), angle: .zero) }
+        if let y = yAnchor {
+            horizontalGuide.isHidden = false
+            horizontalGuide.frame = CGRect(x: 0, y: y, width: canvasView.bounds.width, height: 1)
+            hapticFeedbackGenerator.impactOccurred()
+        } else {
+            horizontalGuide.isHidden = true
+        }
+        hapticFeedbackGenerator.prepare()
     }
 
     // MARK: Item adder methods
@@ -242,7 +192,13 @@ class CanvasViewController: UIViewController {
     }
 
     @objc private func showItemPicker() {
-        let viewController = ItemPickerViewController(overlays: overlays)
+        let viewModel = viewModel.itemPickerViewModel()
+        let viewController = ItemPickerViewController(viewModel: viewModel)
+
+        viewController.onItemSelected = { [weak self] item in
+            guard let self else { return }
+            self.viewModel.addItem(from: item, to: canvasView)
+        }
 
         let navigationController = UINavigationController(rootViewController: viewController)
         navigationController.modalPresentationStyle = .pageSheet
@@ -251,37 +207,7 @@ class CanvasViewController: UIViewController {
             sheet.detents = [.medium(), .large()]
             sheet.prefersGrabberVisible = true
         }
-
-        viewController.onItemSelected = { [weak self] item in
-            self?.addItem(item)
-        }
-
         present(navigationController, animated: true)
-    }
-
-    private func addItem(_ item: UIImage) {
-        let itemHeight = canvasSize.height / 4
-        let factor = itemHeight / item.size.height
-
-        let imageView = UIImageView(image: item)
-        imageView.frame = CGRect(x: 0, y: 0, width: item.size.width * factor, height: item.size.height * factor)
-        imageView.isUserInteractionEnabled = true
-
-        canvasView.addSubview(imageView)
-        select(item: imageView)
-    }
-
-    // MARK: Fetch items methods
-
-    private func fetchItems() async -> [Category] {
-        guard let url = URL(string: "https://appostropheanalytics.herokuapp.com/scrl/test/overlays") else { return [] }
-
-        do {
-            let (data, _) = try await URLSession.shared.data(from: url)
-            return try JSONDecoder().decode([Category].self, from: data)
-        } catch {
-            return []
-        }
     }
 }
 
@@ -301,7 +227,7 @@ extension CanvasViewController {
     // Helper method to add an item to the canvas at a specified location
     func addTestItem(_ item: UIView) {
         canvasView.addSubview(item)
-        select(item: item)
+        viewModel.select(item: item, in: canvasView)
     }
 
     // Helper method to simulate panning an item

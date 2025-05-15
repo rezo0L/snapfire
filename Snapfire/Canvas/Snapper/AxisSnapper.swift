@@ -15,25 +15,25 @@ struct AxisSnapper: Snapper {
         var snappedAnchors: [Anchor] = []
 
         let minHorizontalDistance = anchors.filter { $0.angle == .pi / 2 }.flatMap {[
-            ($0, $0.point.x - proposedFrame.minX),
+            (anchor: $0, delta: $0.point.x - proposedFrame.minX),
             ($0, $0.point.x - proposedFrame.maxX),
             ($0, $0.point.x - proposedFrame.midX)
-        ]}.min { abs($0.1) < abs($1.1) }
+        ]}.min { abs($0.delta) < abs($1.delta) }
 
         let minVerticalDistance = anchors.filter { $0.angle == .zero }.flatMap {[
-            ($0, $0.point.y - proposedFrame.minY),
+            (anchor: $0, delta: $0.point.y - proposedFrame.minY),
             ($0, $0.point.y - proposedFrame.maxY),
             ($0, $0.point.y - proposedFrame.midY)
-        ]}.min { abs($0.1) < abs($1.1) }
+        ]}.min { abs($0.delta) < abs($1.delta) }
 
-        if let minHorizontalDistance, abs(minHorizontalDistance.1) <= threshold {
-            dx = minHorizontalDistance.1
-            snappedAnchors.append(minHorizontalDistance.0)
+        if let minHorizontalDistance, abs(minHorizontalDistance.delta) <= threshold {
+            dx = minHorizontalDistance.delta
+            snappedAnchors.append(minHorizontalDistance.anchor)
         }
 
-        if let minVerticalDistance, abs(minVerticalDistance.1) <= threshold {
-            dy = minVerticalDistance.1
-            snappedAnchors.append(minVerticalDistance.0)
+        if let minVerticalDistance, abs(minVerticalDistance.delta) <= threshold {
+            dy = minVerticalDistance.delta
+            snappedAnchors.append(minVerticalDistance.anchor)
         }
 
         return .init(delta: .init(x: dx, y: dy), snappedAnchors: snappedAnchors)

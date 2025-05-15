@@ -12,7 +12,6 @@ final class ItemPickerCollectionViewHeader: UICollectionReusableView {
 
     private lazy var label: UILabel = {
         let label = UILabel()
-        label.textColor = .black
         label.font = .boldSystemFont(ofSize: 16)
         return label
     }()

@@ -8,7 +8,7 @@
 import Foundation
 
 /// Struct representing an anchor point and its angle.
-public struct Anchor {
+public struct Anchor: Equatable {
     /// The point of the anchor in the coordinate space.
     public let point: CGPoint
 
